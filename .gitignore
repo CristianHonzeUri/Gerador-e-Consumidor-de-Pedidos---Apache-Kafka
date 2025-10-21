@@ -1,0 +1,15 @@
+# Ambiente Virtual
+venv/
+*.venv
+.venv/
+
+# Cache do Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Arquivos do VS Code
+.vscode/
+
+# Arquivos do Docker (geralmente não são versionados)
+.dockerignore
