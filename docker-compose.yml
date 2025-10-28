@@ -1,4 +1,5 @@
 services:
+  # 1. O SERVIÇO DO KAFKA (Sem mudanças)
   kafka:
     image: confluentinc/cp-kafka:latest 
     ports:
@@ -6,8 +7,6 @@ services:
     volumes:
       - "kafka_data:/var/lib/kafka/data"
     environment:
-      # --- Configuração do KRaft (sem Zookeeper) ---
-      # Esta seção agora é um 'mapa', sem traços '-'
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
@@ -16,13 +15,45 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT'
-
-      # --- Configurações do Laboratório (Partições e Tópicos) ---
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_NUM_PARTITIONS: 3
+
+  # 2. NOSSOS SERVIÇOS CONSUMIDORES (COM A CORREÇÃO DE BUFFER)
+  servico_estoque:
+    build: .
+    command: ["sh", "-c", "sleep 5 && python servico_estoque.py"]
+    # A LINHA DE CORREÇÃO ESTÁ AQUI:
+    environment: [ "PYTHONUNBUFFERED=1" ]
+    depends_on:
+      - kafka
+
+  servico_pagamento:
+    build: .
+    command: ["sh", "-c", "sleep 5 && python servico_pagamento.py"]
+    # A LINHA DE CORREÇÃO ESTÁ AQUI:
+    environment: [ "PYTHONUNBUFFERED=1" ]
+    depends_on:
+      - kafka
+
+  servico_notificacao:
+    build: .
+    command: ["sh", "-c", "sleep 5 && python servico_notificacao.py"]
+    # A LINHA DE CORREÇÃO ESTÁ AQUI:
+    environment: [ "PYTHONUNBUFFERED=1" ]
+    depends_on:
+      - kafka
+
+  # 3. NOSSO SERVIÇO PRODUTOR (COM A CORREÇÃO DE BUFFER)
+  produtor_pedidos:
+    build: .
+    command: ["sh", "-c", "sleep 15 && python produtor_pedidos.py"]
+    # A LINHA DE CORREÇÃO ESTÁ AQUI:
+    environment: [ "PYTHONUNBUFFERED=1" ]
+    depends_on:
+      - kafka
 
 volumes:
   kafka_data:
